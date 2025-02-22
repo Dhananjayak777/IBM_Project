@@ -1,4 +1,4 @@
-# IBM_Project
+# STREAMLINING FLIGHT BOOKING MANAGEMENT SYSTEM DEPLOYMENT WITH CI/CD PIPELINE AUTOMATION
 The Flight Booking Management System is a web-based application designed to manage flight bookings, schedules, and user reservations efficiently. The project follows a microservices architecture, with separate frontend and backend components, and integrates CI/CD automation for streamlined deployment.
 
 # User Features
