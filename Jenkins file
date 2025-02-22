@@ -1,0 +1,107 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_USERNAME = '<your-dockerhub-username>'
+        FRONTEND_IMAGE = 'flight-frontend'
+        BACKEND_IMAGE = 'flight-backend'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/<your-username>/flight-booking-management.git'
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                script {
+                    sh '''
+                    cd server
+                    pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                script {
+                    sh '''
+                    cd user
+                    npm install
+                    npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Test Backend') {
+            steps {
+                script {
+                    sh '''
+                    cd server
+                    pytest tests/
+                    '''
+                }
+            }
+        }
+
+        stage('Test Frontend') {
+            steps {
+                script {
+                    sh '''
+                    cd user
+                    npm test -- --passWithNoTests
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    sh '''
+                    docker build -t $DOCKERHUB_USERNAME/$BACKEND_IMAGE:latest ./server
+                    docker build -t $DOCKERHUB_USERNAME/$FRONTEND_IMAGE:latest ./user
+                    '''
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                script {
+                    sh '''
+                    docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+                    docker push $DOCKERHUB_USERNAME/$BACKEND_IMAGE:latest
+                    docker push $DOCKERHUB_USERNAME/$FRONTEND_IMAGE:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh '''
+                    kubectl apply -f k8s/backend-deployment.yaml
+                    kubectl apply -f k8s/frontend-deployment.yaml
+                    kubectl apply -f k8s/backend-service.yaml
+                    kubectl apply -f k8s/frontend-service.yaml
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs.'
+        }
+    }
+}
