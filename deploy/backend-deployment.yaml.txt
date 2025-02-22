@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flight-booking-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flight-booking-backend
+  template:
+    metadata:
+      labels:
+        app: flight-booking-backend
+    spec:
+      containers:
+        - name: backend
+          image: your-dockerhub-username/backend-app:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-uri-secret
+                  key: mongo-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: jwt-secret
+      imagePullSecrets:
+        - name: cloud-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flight-booking-backend
+spec:
+  selector:
+    app: flight-booking-backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP
