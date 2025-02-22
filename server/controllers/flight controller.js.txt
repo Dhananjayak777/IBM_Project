@@ -1,0 +1,23 @@
+const Flight = require("../models/flight");
+
+// Get all flights
+exports.getFlights = async (req, res) => {
+    try {
+        const flights = await Flight.find();
+        res.json(flights);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching flights", error });
+    }
+};
+
+// Add a new flight
+exports.addFlight = async (req, res) => {
+    try {
+        const { name, origin, destination, price } = req.body;
+        const flight = new Flight({ name, origin, destination, price });
+        await flight.save();
+        res.status(201).json({ message: "Flight added successfully", flight });
+    } catch (error) {
+        res.status(500).json({ message: "Error adding flight", error });
+    }
+};

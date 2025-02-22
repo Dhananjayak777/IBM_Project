@@ -1,0 +1,86 @@
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Flight Booking System Loaded");
+
+    // Elements
+    const bookingForm = document.getElementById("booking-form");
+    const flightsList = document.getElementById("flights-list");
+    const userBookings = document.getElementById("user-bookings");
+
+    // API Base URL
+    const API_URL = "http://localhost:5000";  // Update if backend is hosted elsewhere
+
+    // Fetch available flights
+    async function fetchFlights() {
+        try {
+            const response = await fetch(`${API_URL}/flights`);
+            const flights = await response.json();
+            displayFlights(flights);
+        } catch (error) {
+            console.error("Error fetching flights:", error);
+        }
+    }
+
+    // Display flights
+    function displayFlights(flights) {
+        flightsList.innerHTML = "";
+        flights.forEach(flight => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <strong>${flight.name}</strong> - ${flight.origin} to ${flight.destination} 
+                <button onclick="bookFlight('${flight.id}')">Book</button>
+            `;
+            flightsList.appendChild(li);
+        });
+    }
+
+    // Book a flight
+    async function bookFlight(flightId) {
+        try {
+            const response = await fetch(`${API_URL}/bookings`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ flightId })
+            });
+
+            const result = await response.json();
+            alert(result.message || "Booking successful!");
+            fetchUserBookings();
+        } catch (error) {
+            console.error("Error booking flight:", error);
+        }
+    }
+
+    // Fetch user bookings
+    async function fetchUserBookings() {
+        try {
+            const response = await fetch(`${API_URL}/bookings`);
+            const bookings = await response.json();
+            displayUserBookings(bookings);
+        } catch (error) {
+            console.error("Error fetching bookings:", error);
+        }
+    }
+
+    // Display user bookings
+    function displayUserBookings(bookings) {
+        userBookings.innerHTML = "";
+        bookings.forEach(booking => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${booking.flightName}</strong> - Booking ID: ${booking.id}`;
+            userBookings.appendChild(li);
+        });
+    }
+
+    // Form submission event
+    if (bookingForm) {
+        bookingForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const flightId = document.getElementById("flight-id").value;
+            bookFlight(flightId);
+        });
+    }
+
+    // Initial fetch
+    fetchFlights();
+    fetchUserBookings();
+});

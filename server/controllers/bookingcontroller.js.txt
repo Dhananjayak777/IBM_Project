@@ -1,0 +1,28 @@
+const Booking = require("../models/booking");
+const Flight = require("../models/flight");
+
+// Book a flight
+exports.bookFlight = async (req, res) => {
+    try {
+        const { flightId, userId } = req.body;
+        const flight = await Flight.findById(flightId);
+        if (!flight) return res.status(404).json({ message: "Flight not found" });
+
+        const booking = new Booking({ flightId, userId });
+        await booking.save();
+        res.status(201).json({ message: "Booking successful", booking });
+    } catch (error) {
+        res.status(500).json({ message: "Error booking flight", error });
+    }
+};
+
+// Get all bookings for a user
+exports.getUserBookings = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const bookings = await Booking.find({ userId }).populate("flightId");
+        res.json(bookings);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching bookings", error });
+    }
+};
